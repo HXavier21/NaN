@@ -11,6 +11,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.notification_assistant.ui.pages.MainScreen
+import com.example.notification_assistant.ui.pages.MainScreenPreview
 import com.example.notification_assistant.ui.theme.Notification_AssistantTheme
 
 class MainActivity : ComponentActivity() {
@@ -20,28 +22,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             Notification_AssistantTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    MainScreen(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    Notification_AssistantTheme {
-        Greeting("Android")
     }
 }
