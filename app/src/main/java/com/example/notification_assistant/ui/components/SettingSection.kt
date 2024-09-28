@@ -23,14 +23,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,7 +40,7 @@ import com.example.notification_assistant.ui.theme.Notification_AssistantTheme
 fun SettingSection(
     modifier: Modifier = Modifier,
     sectionName: String = "",
-    settingList: List<@Composable () -> Unit> = listOf()
+    settingList: List<SettingItem> = listOf()
 ) {
     Column(modifier = modifier) {
         Text(
@@ -59,18 +58,39 @@ fun SettingSection(
             elevation = CardDefaults.elevatedCardElevation()
 
         ) {
-            for (settingItem in settingList.dropLast(1)) {
-                settingItem()
-                HorizontalDivider(modifier = Modifier)
+            settingList.forEachIndexed { index, settingItem ->
+                with(settingItem) {
+                    SettingItemImpl(
+                        leadingIcon = leadingIcon,
+                        settingText = settingText,
+                        defaultValue = defaultValue,
+                        isSwitch = isSwitch,
+                        checked = checked,
+                        onCheckedChange = onCheckedChange,
+                        onItemClick = onItemClick
+                    )
+                }
+                if (index < settingList.lastIndex) {
+                    HorizontalDivider(modifier = Modifier)
+                }
             }
-            settingList.last()()
         }
     }
 }
 
+data class SettingItem(
+    val leadingIcon: ImageVector? = null,
+    val settingText: String,
+    val defaultValue: String? = null,
+    val isSwitch: Boolean = false,
+    var checked: Boolean = false,
+    val onCheckedChange: (Boolean) -> Unit = {},
+    val onItemClick: () -> Unit = {}
+)
+
 @Composable
-fun SettingItem(
-    leadingIcon: (@Composable () -> Unit)? = null,
+fun SettingItemImpl(
+    leadingIcon: ImageVector? = null,
     settingText: String,
     defaultValue: String? = null,
     isSwitch: Boolean = false,
@@ -86,7 +106,11 @@ fun SettingItem(
 
     ) {
         leadingIcon?.let {
-            it()
+            Icon(
+                imageVector = it,
+                contentDescription = "",
+                tint = MaterialTheme.colorScheme.primary
+            )
         }
         var textHeight by remember { mutableIntStateOf(0) }
         Text(
@@ -134,58 +158,26 @@ fun SettingSectionPreview() {
                 modifier = Modifier.padding(16.dp),
                 sectionName = "Reject Screen",
                 settingList = listOf(
-                    {
-                        SettingItem(
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = "",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            },
-                            settingText = "Screen Usage",
-                            defaultValue = "On"
-                        )
-                    },
-                    {
-                        SettingItem(
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Menu,
-                                    contentDescription = "",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            },
-                            settingText = "Dark Mode",
-                            isSwitch = true,
-                            checked = true
-                        )
-                    },
-                    {
-                        SettingItem(
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.AccountCircle,
-                                    contentDescription = "",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            },
-                            settingText = "Online Mode",
-                            isSwitch = true
-                        )
-                    },
-                    {
-                        SettingItem(
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Settings,
-                                    contentDescription = "",
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            },
-                            settingText = "Screen Usage"
-                        )
-                    }
+                    SettingItem(
+                        leadingIcon = Icons.Default.Add,
+                        settingText = "Screen Usage",
+                        defaultValue = "On"
+                    ),
+                    SettingItem(
+                        leadingIcon = Icons.Default.Menu,
+                        settingText = "Dark Mode",
+                        isSwitch = true,
+                        checked = true
+                    ),
+                    SettingItem(
+                        leadingIcon = Icons.Default.AccountCircle,
+                        settingText = "Online Mode",
+                        isSwitch = true
+                    ),
+                    SettingItem(
+                        leadingIcon = Icons.Default.Settings,
+                        settingText = "Screen Usage"
+                    )
                 )
             )
         }
