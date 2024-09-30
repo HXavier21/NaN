@@ -2,14 +2,12 @@ package com.example.notification_assistant.ui.components
 
 import android.view.MotionEvent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
@@ -22,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -61,7 +60,8 @@ fun MainBottomBarImpl(
             nextIcon = Icons.Default.NotificationsActive,
             tint = MaterialTheme.colorScheme.primary,
             panel = "Notifications",
-            onIconClick = { onItemClick(0) }
+            onIconClick = { onItemClick(0) },
+            enableVibrate = true
         )
         AnimatedIcon(
             modifier = Modifier.weight(1f),
@@ -70,14 +70,15 @@ fun MainBottomBarImpl(
             nextIcon = Icons.Default.Summarize,
             tint = MaterialTheme.colorScheme.primary,
             panel = "Summary",
-            onIconClick = { onItemClick(1) }
+            onIconClick = { onItemClick(1) },
+            enableBomb = true
         )
         AnimatedIcon(
             modifier = Modifier.weight(1f),
             selected = selectedIndex == 2,
             previousIcon = Icons.Default.Settings,
             tint = MaterialTheme.colorScheme.primary,
-            panel = "Files",
+            panel = "Settings",
             onIconClick = { onItemClick(2) },
             enableRotate = true
         )
@@ -95,6 +96,8 @@ fun AnimatedIcon(
     panel: String? = null,
     onIconClick: () -> Unit = {},
     enableRotate: Boolean = false,
+    enableBomb: Boolean = false,
+    enableVibrate: Boolean = false,
     tween: Int = 500
 ) {
     var isPressed by remember { mutableStateOf(false) }
@@ -105,11 +108,54 @@ fun AnimatedIcon(
         }, label = "",
         animationSpec = tween(tween, easing = LinearOutSlowInEasing)
     )
-    val animatedRotation by animateFloatAsState(
-        targetValue = if (selected) 36f else 0f,
-        label = "",
-        animationSpec = tween(tween, easing = LinearOutSlowInEasing)
-    )
+    lateinit var animatedRotation: State<Float>
+    if (enableRotate) {
+        animatedRotation = animateFloatAsState(
+            targetValue = if (selected) 72f else 0f,
+            label = "",
+            animationSpec = tween(tween, easing = LinearOutSlowInEasing)
+        )
+    }
+    lateinit var animatedBombX: State<Float>
+    lateinit var animatedBombY: State<Float>
+    if (enableBomb) {
+        animatedBombX = animateFloatAsState(
+            targetValue = if (selected) 1f else 0.99f,
+            label = "",
+            animationSpec = keyframes {
+                durationMillis = tween
+                1f at 0
+                1.4f at tween / 2 using LinearOutSlowInEasing
+                1f at tween
+            }
+        )
+        animatedBombY = animateFloatAsState(
+            targetValue = if (selected) 1f else 0.99f,
+            label = "",
+            animationSpec = keyframes {
+                durationMillis = tween
+                1f at 0
+                0.6f at tween / 2 using LinearOutSlowInEasing
+                1f at tween
+            }
+        )
+    }
+    lateinit var animatedVibrate: State<Float>
+    if (enableVibrate) {
+        animatedVibrate = animateFloatAsState(
+            targetValue = if (selected) 0f else 0.01f,
+            label = "",
+            animationSpec = keyframes {
+                durationMillis = tween
+                0f at 0
+                5f at tween / 8
+                (-5f) at tween * 3 / 8
+                5f at tween * 5 / 8
+                (-5f) at tween * 7 / 8
+                0f at tween
+            }
+        )
+    }
     Column(
         modifier = Modifier
             .scale(animatedScale)
@@ -132,7 +178,14 @@ fun AnimatedIcon(
             modifier = Modifier
                 .graphicsLayer {
                     if (enableRotate) {
-                        rotationZ = animatedRotation
+                        rotationZ = animatedRotation.value
+                    }
+                    if (enableBomb) {
+                        scaleX = if (selected) animatedBombX.value else 1f
+                        scaleY = if (selected) animatedBombY.value else 1f
+                    }
+                    if (enableVibrate) {
+                        translationX = if (selected) animatedVibrate.value else 0f
                     }
                 }
         )
@@ -154,21 +207,5 @@ fun AnimatedIcon(
 fun MainBottomBarPreview() {
     Notification_AssistantTheme {
         MainBottomBar()
-    }
-}
-
-@Preview
-@Composable
-fun AnimatedIconPreview() {
-    Notification_AssistantTheme {
-        var selected by remember { mutableStateOf(false) }
-        AnimatedIcon(
-            modifier = Modifier.height(68.dp),
-            selected = selected,
-            Icons.Default.Notifications,
-            Icons.Default.NotificationsActive,
-            onIconClick = { selected = !selected },
-            panel = "Notifications"
-        )
     }
 }
